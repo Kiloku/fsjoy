@@ -1,0 +1,13 @@
+# Reference: https://build-cpp.github.io/cmkr/cmake-toml
+[project]
+name = "fsjoy"
+
+[find-package.SDL2]
+required = true
+
+[target.fsjoy]
+type = "executable"
+link-libraries = ["SDL2"]
+include-directories = ["${SDL2_INCLUDE_DIRS}", ".", "imgui", "imgui/backends"]
+sources = ["main.cpp","imgui/*.cpp", "imgui/backends/*.cpp"]
+compile-definitions = ["DCMAKE_EXPORT_COMPILE_COMMANDS"]
