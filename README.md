@@ -1,12 +1,12 @@
 # fsjoy
 Freespace Open Joystick Selector
 
-#Requirements
+# Requirements
 
 This project requires SDL2 2.0.17 or higher.  
 This requirement is inherited from [Dear ImGui](https://github.com/ocornut/imgui) which it uses to draw the GUI.
 
-#Building
+# Building
 
 I have only tested this on linux (Pop!OS 22.04)  
 Use [cmkr](https://cmkr.build/): 
