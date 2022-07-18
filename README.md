@@ -1,5 +1,5 @@
 # Freespace Open Joystick Selector
-Freespace Open Joystick Selector
+![image](https://user-images.githubusercontent.com/4577144/179551425-a5c1424f-732e-42fb-825d-7f6af6028360.png)
 
 # Requirements
 
