@@ -1,4 +1,4 @@
-# fsjoy
+# Freespace Open Joystick Selector
 Freespace Open Joystick Selector
 
 # Requirements
