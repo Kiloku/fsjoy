@@ -11,10 +11,8 @@
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
 
-int main()
-{
-	if (SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK ) < 0)
-	{
+int main() {
+	if (SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK ) < 0) {
 		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
 		exit(1);
 	}
@@ -29,21 +27,20 @@ int main()
 
 	gui_init();
 
-	while (!done)
-	{
+	while (!done) {
 		loop();
 	}
 
 	cleanup();
 }
 
-void find_system_joysticks(){
+void find_system_joysticks() {
 	int num_joy, i;
 	num_joy = SDL_NumJoysticks();
 	printf("%d joysticks found\n", num_joy);
+	//Adding a NONE_JOYSTICK is mainly to allow the user to select "None".
 	system_joysticks.push_back(NONE_JOYSTICK);
-	for(i = 0; i < num_joy; i++)
-	{
+	for(i = 0; i < num_joy; i++) {
 		SDL_Joystick *joystick = SDL_JoystickOpen(i);
 		joystick_info j;
 		char* tempguid = new char[33];
@@ -59,20 +56,20 @@ void find_ini_joysticks() {
 	std::string ini = std::string(SDL_GetPrefPath(ORGANIZATION_NAME, APPLICATION_NAME)) + FS_INI;
 	std::ifstream f(ini);
 
-	if (f.good()){
+	if (f.good()) {
 		std::string line;
 		while (std::getline(f, line)) {
 			auto sep = line.find("=");
 
-			if (sep > 0){
+			if (sep > 0) {
 				std::string key = line.substr(0, sep);
 				std::string val = "";
+				//We handle the old style of joystick settings, but won't save to the old style.
 				if (key == "CurrentJoystick" || key == "Joy0ID") {
 					val = line.substr(sep+1, std::string::npos);
 					fso_joysticks[0].id = std::stoi(val);
 				}
-				if (key == "CurrentJoystickGUID" || key == "Joy0GUID")
-				{
+				if (key == "CurrentJoystickGUID" || key == "Joy0GUID") {
 					val = line.substr(sep+1, std::string::npos);
 					fso_joysticks[0].guid = val;
 					fso_joysticks[0].name = get_system_joystick_name(fso_joysticks[0].guid);
@@ -93,9 +90,8 @@ void find_ini_joysticks() {
 	}
 	f.close();
 
-	for (int i = 0; i < MAX_JOYSTICKS; i++)
-	{
-		if (fso_joysticks[i].guid != ""){
+	for (int i = 0; i < MAX_JOYSTICKS; i++) {
+		if (fso_joysticks[i].guid != "") {
 			selected_joysticks[i] = fso_joysticks[i];
 		}
 	}
@@ -121,6 +117,8 @@ void update_fso_settings(){
 	std::ifstream fi(ini);
 	std::vector<std::string> settings;
 
+	//First, we store the current ini settings in memory, including the ones we don't actually use.
+	//This is because we'll have to rewrite the file, as editing it in place is harder.
 	if (fi.good()){
 		std::string line;
 		while (std::getline(fi, line)) {
@@ -139,9 +137,8 @@ void update_fso_settings(){
 		return;
 	}
 
-
-	std::string section = "";
-	int joyline = -1;
+	std::string section = ""; //Current section. This variable is currently unused
+	int joyline = -1; //The line of the file at which we first found a joystick setting
 	int count = 0;
 	for (auto &l : settings) {
 		if (l[0] == '[' && l.back() == ']'){
@@ -162,11 +159,11 @@ void update_fso_settings(){
 		}
 		count++;
 	}
-	
+
 	auto it = settings.begin() + joyline;
 	auto joys = selected_joysticks_to_lines();
 	for (int i = 0; i < joys.size(); i++ ) {
-		settings.emplace(it+i, joys[i] );
+		settings.emplace(it+i, joys[i]);
 	}
 
 	std::ofstream fo(ini);
@@ -181,10 +178,8 @@ void update_fso_settings(){
 	dirty = false;
 }
 
-
 std::string get_system_joystick_name(std::string guid) {
-	for (auto &j : system_joysticks)
-	{
+	for (auto &j : system_joysticks) {
 		if (str_tolower(guid) == str_tolower(j.guid)) return j.name;
 	}
 	return "";
@@ -195,9 +190,8 @@ void gui_init() {
 	window = SDL_CreateWindow("FSO Joystick Selector", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 250, window_flags);
 	// Setup SDL_Renderer instance
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-	
-	if (renderer == NULL)
-	{
+
+	if (renderer == NULL) {
 		SDL_Log("Error creating SDL_Renderer!");
 		exit(1);
 	}
@@ -205,25 +199,23 @@ void gui_init() {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	
+
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
-	
+
 	// Setup Platform/Renderer backends
 	ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
 	ImGui_ImplSDLRenderer_Init(renderer);
 }
 
-void loop(){
+void loop() {
 	// Poll and handle events (inputs, window resize, etc.)
 	SDL_Event event;
-	while (SDL_PollEvent(&event))
-	{
+	while (SDL_PollEvent(&event)) {
 		ImGui_ImplSDL2_ProcessEvent(&event);
-		if (event.type == SDL_QUIT || (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)))
-		{
-			if (dirty)
-				quit_modal = true;
+		if (event.type == SDL_QUIT || (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))) {
+			if (dirty) //User wants to close, but has unsaved data. We'll display a modal asking them about it.
+				unsaved_modal = true;
 			else
 				done = true;
 		}
@@ -240,26 +232,27 @@ void loop(){
 		ImGui::SetNextWindowPos(viewport->WorkPos);
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 
-		ImGui::Begin("FSO Joystick Selector", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);	
-		if (quit_modal) ImGui::OpenPopup("Unsaved");
-		for(int i = 0; i < MAX_JOYSTICKS; i++){
+		ImGui::Begin("FSO Joystick Selector", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+
+		for(int i = 0; i < MAX_JOYSTICKS; i++) {
 			joystick_combo(i);
 		}
 
-		if (ImGui::Button("Save")){
+		if (ImGui::Button("Save")) {
 			update_fso_settings();
-			dirty = false;
 		}
 
-		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-		
-		if (ImGui::BeginPopupModal("Unsaved"))
-		{
+		if (unsaved_modal) {
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			ImGui::OpenPopup("Unsaved");
+		}
+
+		if (ImGui::BeginPopupModal("Unsaved")) {
 			ImGui::Text("You have unsaved changes.\n\n");
 			ImGui::Separator();
-			
-			if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); quit_modal = false; }
+
+			if (ImGui::Button("Cancel")) { ImGui::CloseCurrentPopup(); unsaved_modal = false; }
 			ImGui::SetItemDefaultFocus();
 			ImGui::SameLine();
 			if (ImGui::Button("Save and close")) { update_fso_settings(); done = true; }
@@ -267,10 +260,9 @@ void loop(){
 			if (ImGui::Button("Close without saving")) { done = true; }
 			ImGui::EndPopup();
 		}
-		
+
 		ImGui::End();
 	}
-
 
 	// Rendering
 	ImGui::Render();
@@ -290,15 +282,12 @@ void cleanup() {
 	SDL_Quit();
 }
 
-void joystick_combo(int index){
+void joystick_combo(int index) {
 	std::string combo_id = std::string("joy") + std::to_string(index);
 
-	if (ImGui::BeginCombo(combo_id.c_str(), selected_joysticks[index].name.c_str(), 0))
-	{
-		for (int n = 0; n < system_joysticks.size(); n++)
-		{
-			if (ImGui::Selectable(system_joysticks[n].name.c_str()))
-			{
+	if (ImGui::BeginCombo(combo_id.c_str(), selected_joysticks[index].name.c_str(), 0)) {
+		for (int n = 0; n < system_joysticks.size(); n++) {
+			if (ImGui::Selectable(system_joysticks[n].name.c_str())) {
 				selected_joysticks[index] = system_joysticks[n];
 				dirty = true;
 			}
